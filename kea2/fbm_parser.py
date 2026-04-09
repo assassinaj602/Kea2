@@ -568,15 +568,35 @@ class FBMMerger:
         else:
             return Path.cwd() / 'configs' / 'merge_fbm'
 
-    def _remote_fbm_path(self, package_name: str) -> str:
-        return f"/sdcard/fastbot_{package_name}.fbm"
+    def _normalize_variant(self, variant: str = 'dynamic') -> str:
+        if variant in (None, '', 'dynamic'):
+            return 'dynamic'
+        if variant == 'static':
+            return 'static'
+        raise ValueError(f"Unsupported FBM variant: {variant}")
+
+    def _fbm_file_stem(self, package_name: str, variant: str = 'dynamic') -> str:
+        variant = self._normalize_variant(variant)
+        suffix = '.static' if variant == 'static' else ''
+        return f"fastbot_{package_name}{suffix}"
+
+    def _pc_fbm_path(self, package_name: str, variant: str = 'dynamic'):
+        return self._pc_dir / f"{self._fbm_file_stem(package_name, variant)}.fbm"
+
+    def _remote_fbm_path(self, package_name: str, variant: str = 'dynamic') -> str:
+        return f"/sdcard/{self._fbm_file_stem(package_name, variant)}.fbm"
+
+    def _remote_snapshot_path(self, package_name: str, variant: str = 'dynamic') -> str:
+        return f"/sdcard/{self._fbm_file_stem(package_name, variant)}.snapshot.fbm"
 
 
-    def pull_and_merge_to_pc(self, package_name: str, device: str = None, transport_id: str = None):
+    def pull_and_merge_to_pc(self, package_name: str, device: str = None, transport_id: str = None,
+                             variant: str = 'dynamic'):
         """Pull device FBM for package and merge it into PC fbm (PC file will be updated).
 
         Returns True on success (or if nothing to do), False on failure.
         """
+        variant = self._normalize_variant(variant)
         try:
             # Use upstream adbutils directly (avoids relying on removed wrapper helpers)
             from adbutils import adb
@@ -587,13 +607,14 @@ class FBMMerger:
 
         pc_dir = self._pc_dir
         pc_dir.mkdir(parents=True, exist_ok=True)
-        pc_file = pc_dir / f"fastbot_{package_name}.fbm"
+        fbm_stem = self._fbm_file_stem(package_name, variant)
+        pc_file = self._pc_fbm_path(package_name, variant)
         # generate a short random suffix for all intermediate files to avoid clashes between processes
         rand = uuid.uuid4().hex[:8]
-        pulled_tmp = pc_dir / f"fastbot_{package_name}.from_device.{rand}.fbm"
-        merged_tmp = pc_dir / f"fastbot_{package_name}.merged.{rand}.fbm"
+        pulled_tmp = pc_dir / f"{fbm_stem}.from_device.{rand}.fbm"
+        merged_tmp = pc_dir / f"{fbm_stem}.merged.{rand}.fbm"
 
-        remote = self._remote_fbm_path(package_name)
+        remote = self._remote_fbm_path(package_name, variant)
         try:
             print(f"Attempting to pull {remote} to {pulled_tmp}")
             dev.sync.pull(remote, str(pulled_tmp))
@@ -601,18 +622,18 @@ class FBMMerger:
             print(f"dev.sync.pull failed for {remote}: {e}")
 
         if not pulled_tmp.exists() or pulled_tmp.stat().st_size == 0:
-            print(f"No FBM on device for {package_name}, nothing merged to PC.")
+            print(f"No {variant} FBM on device for {package_name}, nothing merged to PC.")
             try:
                 if pulled_tmp.exists():
                     pulled_tmp.unlink()
             except Exception:
                 pass
-            return False
+            return True
 
         # --- Try snapshot/delta workflow first ---
-        snapshot_remote = f"/sdcard/fastbot_{package_name}.snapshot.fbm"
-        pulled_snap_tmp = pc_dir / f"fastbot_{package_name}.snapshot.from_device.{rand}.fbm"
-        delta_tmp = pc_dir / f"fastbot_{package_name}.delta.{rand}.fbm"
+        snapshot_remote = self._remote_snapshot_path(package_name, variant)
+        pulled_snap_tmp = pc_dir / f"{fbm_stem}.snapshot.from_device.{rand}.fbm"
+        delta_tmp = pc_dir / f"{fbm_stem}.delta.{rand}.fbm"
         try:
             # attempt to pull snapshot (may fail silently)
             try:
@@ -624,20 +645,20 @@ class FBMMerger:
             # Compute delta using snapshot if it exists, otherwise treat snapshot as empty (delta == current)
             snapshot_path = str(pulled_snap_tmp) if pulled_snap_tmp.exists() and pulled_snap_tmp.stat().st_size > 0 else None
             if snapshot_path:
-                print(f"Snapshot found on device for {package_name}, computing delta -> {delta_tmp}")
+                print(f"{variant} snapshot found on device for {package_name}, computing delta -> {delta_tmp}")
             else:
-                print(f"No snapshot on device for {package_name}; treating snapshot as empty -> computing delta -> {delta_tmp}")
+                print(f"No {variant} snapshot on device for {package_name}; treating snapshot as empty -> computing delta -> {delta_tmp}")
 
             ok = self.compute_delta(snapshot_path, str(pulled_tmp), str(delta_tmp))
             if not ok:
                 print("Delta computation failed; not performing merge.")
                 return False
 
-            print(f"Applying delta to PC core fbm: {delta_tmp} -> {pc_file}")
+            print(f"Applying {variant} delta to PC core fbm: {delta_tmp} -> {pc_file}")
             # apply_delta_to_pc will perform necessary locking around pc_file operations
             applied = self.apply_delta_to_pc(str(pc_file), str(delta_tmp))
             if applied:
-                print(f"[FBM] delta applied to PC for package '{package_name}'")
+                print(f"[FBM] {variant} delta applied to PC for package '{package_name}'")
                 return True
             else:
                 print("Applying delta failed; not performing merge.")
@@ -666,14 +687,16 @@ class FBMMerger:
                 pass
 
     # --- New workflow helpers ---
-    def create_device_snapshot(self, package_name: str, snapshot_remote: str = None, device: str = None, transport_id: str = None) -> bool:
+    def create_device_snapshot(self, package_name: str, snapshot_remote: str = None, device: str = None,
+                               transport_id: str = None, variant: str = 'dynamic') -> bool:
         """Create an on-device snapshot (copy) of the fbm file.
 
         Attempts `adb shell cp <src> <dst>` first, falls back to pull/push if cp is not available.
         Returns True on success.
         """
-        src = self._remote_fbm_path(package_name)
-        dst = snapshot_remote or f"/sdcard/fastbot_{package_name}.snapshot.fbm"
+        variant = self._normalize_variant(variant)
+        src = self._remote_fbm_path(package_name, variant)
+        dst = snapshot_remote or self._remote_snapshot_path(package_name, variant)
         try:
             # Prefer using adbutils directly for shell commands
             from adbutils import adb
@@ -691,7 +714,7 @@ class FBMMerger:
             print(f"adb shell cp failed ({e}), trying pull/push fallback")
             # fallback: pull then push to dst
             try:
-                pc_tmp = os.path.join(self._pc_dir, f"fastbot_{package_name}.snapshot.from_device.fbm")
+                pc_tmp = os.path.join(self._pc_dir, f"{self._fbm_file_stem(package_name, variant)}.snapshot.from_device.fbm")
                 dev.sync.pull(src, pc_tmp)
                 dev.sync.push(pc_tmp, dst)
                 try:

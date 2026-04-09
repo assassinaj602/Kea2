@@ -551,6 +551,9 @@ class KeaTestRunner(TextTestRunner, KeaOptionSetter, SetUpClassExtension):
                 log_watcher.close()
                 result.has_crash_or_anr = log_watcher.has_crash_or_anr
 
+                for hook in list(getattr(self, "_before_summary_hooks", [])):
+                    hook()
+
                 result.logSummary()
                 self._generate_bug_report()
 
