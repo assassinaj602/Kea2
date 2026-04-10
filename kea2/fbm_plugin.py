@@ -31,6 +31,7 @@ def create_device_snapshots(options: "Options") -> None:
     - Uses ADBDevice.shell (no subprocess) and retries cp up to max_retries.
     - Logs errors and never raises to avoid blocking startup.
     """
+    ADBDevice.setDevice(options.serial, options.transport_id)
 
     for pkg in options.packageNames:
         for variant in FBM_VARIANTS:

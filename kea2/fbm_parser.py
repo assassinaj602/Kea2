@@ -589,6 +589,12 @@ class FBMMerger:
     def _remote_snapshot_path(self, package_name: str, variant: str = 'dynamic') -> str:
         return f"/sdcard/{self._fbm_file_stem(package_name, variant)}.snapshot.fbm"
 
+    def _select_device(self, device: str = None, transport_id: str = None):
+        from adbutils import adb
+        if device or transport_id:
+            return adb.device(serial=device, transport_id=transport_id)
+        return adb.device()
+
 
     def pull_and_merge_to_pc(self, package_name: str, device: str = None, transport_id: str = None,
                              variant: str = 'dynamic'):
@@ -598,9 +604,7 @@ class FBMMerger:
         """
         variant = self._normalize_variant(variant)
         try:
-            # Use upstream adbutils directly (avoids relying on removed wrapper helpers)
-            from adbutils import adb
-            dev = adb.device(device) if device else adb.device()
+            dev = self._select_device(device=device, transport_id=transport_id)
         except Exception as e:
             print("ADB utilities (adbutils) not available:", e)
             return False
@@ -693,9 +697,7 @@ class FBMMerger:
         src = self._remote_fbm_path(package_name, variant)
         dst = snapshot_remote or self._remote_snapshot_path(package_name, variant)
         try:
-            # Prefer using adbutils directly for shell commands
-            from adbutils import adb
-            dev = adb.device(device) if device else adb.device()
+            dev = self._select_device(device=device, transport_id=transport_id)
         except Exception as e:
             print("ADB utilities not available:", e)
             return False
