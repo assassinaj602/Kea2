@@ -612,7 +612,6 @@ class FBMMerger:
         # generate a short random suffix for all intermediate files to avoid clashes between processes
         rand = uuid.uuid4().hex[:8]
         pulled_tmp = pc_dir / f"{fbm_stem}.from_device.{rand}.fbm"
-        merged_tmp = pc_dir / f"{fbm_stem}.merged.{rand}.fbm"
 
         remote = self._remote_fbm_path(package_name, variant)
         try:
@@ -620,6 +619,7 @@ class FBMMerger:
             dev.sync.pull(remote, str(pulled_tmp))
         except Exception as e:
             print(f"dev.sync.pull failed for {remote}: {e}")
+            return False
 
         if not pulled_tmp.exists() or pulled_tmp.stat().st_size == 0:
             print(f"No {variant} FBM on device for {package_name}, nothing merged to PC.")
@@ -668,11 +668,6 @@ class FBMMerger:
             try:
                 if pulled_tmp.exists():
                     pulled_tmp.unlink()
-            except Exception:
-                pass
-            try:
-                if merged_tmp.exists():
-                    merged_tmp.unlink()
             except Exception:
                 pass
             try:
