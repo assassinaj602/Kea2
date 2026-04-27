@@ -610,8 +610,7 @@ class KeaTestRunner(TextTestRunner, KeaOptionSetter, SetUpClassExtension):
                 except Exception as e:
                     logger.error(f"Error when checking precond: {propName}")
                     traceback.print_exc()
-                    valid = False
-                    break
+                    raise KeaRuntimeError(f"Error when checking precond: {propName}") from e
             # if all the precond passed. make it the candidate prop.
             if valid:
                 result.addPropertyPrecondSatisfied(test)
@@ -746,7 +745,7 @@ class KeaTestRunner(TextTestRunner, KeaOptionSetter, SetUpClassExtension):
                 except Exception as e:
                     logger.error(f"Error processing precond. Check if precond: {e}")
                     traceback.print_exc()
-                    return False
+                    raise KeaRuntimeError("Error processing block widget precondition.") from e
 
             if preconds_pass(preconds):
                 try:
