@@ -673,8 +673,9 @@ class FBMMerger:
             for p in [pulled_tmp, pulled_snap_tmp, delta_tmp]:
                 try:
                     self._safe_remove_path(p)
-                except Exception:
-                    pass
+                except Exception as e:
+                    # Best-effort cleanup: do not fail merge flow on cleanup errors.
+                    print(f"Cleanup warning: failed to remove {p}: {e}")
 
     def pull_and_merge_to_pc(self, package_name: str, device: str = None, transport_id: str = None):
         """Pull & merge both dynamic and static FBMs for package.
