@@ -1,0 +1,19 @@
+{
+  "artifacts": {
+    "jars": [
+      "kea2/assets/monkeyq.jar",
+      "kea2/assets/kea2-thirdpart.jar",
+      "kea2/assets/fastbot-thirdpart.jar",
+      "kea2/assets/framework.jar"
+    ],
+    "native_libraries": [
+      "kea2/assets/fastbot_libs/armeabi-v7a/libfastbot_native.so",
+      "kea2/assets/fastbot_libs/arm64-v8a/libfastbot_native.so",
+      "kea2/assets/fastbot_libs/x86/libfastbot_native.so",
+      "kea2/assets/fastbot_libs/x86_64/libfastbot_native.so"
+    ]
+  },
+  "fastbot3_commit": "a7ccdf20a1442b469018b4affbff43e503281f65",
+  "fastbot3_repository": "zhangzhao4444/Fastbot3",
+  "imported_at": "2026-05-21T05:26:14Z"
+}

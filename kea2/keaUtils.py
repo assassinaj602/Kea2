@@ -734,12 +734,14 @@ class KeaTestRunner(TextTestRunner, KeaOptionSetter, SetUpClassExtension):
            """
         def _get_xpath_widgets(func):
             blocked_set = set()
-            script_driver = U2Driver.getScriptDriver()
+            # use static checker for precond analysis for block widgets.
+            # Need to be tested.
+            checker = U2Driver.getStaticChecker() if U2Driver.staticChecker is not None else U2Driver.getScriptDriver()
             preconds = getattr(func, PRECONDITIONS_MARKER, [])
 
             def preconds_pass(preconds):
                 try:
-                    return all(precond(script_driver) for precond in preconds)
+                    return all(precond(checker) for precond in preconds)
                 except u2.UiObjectNotFoundError as e:
                     return False
                 except Exception as e:
