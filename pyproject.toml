@@ -1,6 +1,6 @@
 [project]
 name = "Kea2-python"
-version = "1.2.4b12+fbtest3_u2fix"
+version = "1.2.4b13+fbtest3_u2fix_u2port"
 description = "A python library for supporting and customizing automated UI testing for mobile apps"
 readme = "README.md"
 requires-python = ">=3.8"

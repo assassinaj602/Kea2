@@ -227,7 +227,7 @@ wheels = [
 
 [[package]]
 name = "kea2-python"
-version = "1.2.4b12+fbtest3.u2fix"
+version = "1.2.4b13+fbtest3.u2fix.u2port"
 source = { virtual = "." }
 dependencies = [
     { name = "adbutils" },
