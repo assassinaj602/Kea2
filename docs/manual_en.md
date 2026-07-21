@@ -23,6 +23,7 @@ English | [简体中文](/docs/manual_cn.md)
 - [Advanced Feature 1: Stateful Testing](#advanced-feature-1-stateful-testing-带状态的测试)
 - [Advanced Feature 2: Invariant Checks](#advanced-feature-2-ivariant-checks-不变式检查)
 - [Advanced Feature 3: Reusing regression tests](#advanced-feature-3-reusing-regression-tests-兼容已有脚本通过前置脚本步骤到达特定层次)
+- [Advanced Feature 4: Support for WebView Interaction](#advanced-feature-4-support-for-webview-interaction-支持-webview-操作)
 
 ### 7. Experimental Feature
 - [Experimental Feature1: FBM Merge](#experimental-feature1-fbm-merge)
@@ -716,6 +717,10 @@ class Sample_Test(unittest.TestCase):
         tab.ele("#role").select("administrator")
         tab.ele("#submit_btn").click()
 ```
+
+
+https://github.com/user-attachments/assets/f0e5c116-03da-41b0-8f12-c62620fc09a8
+
 
 # Experimental Feature
 
