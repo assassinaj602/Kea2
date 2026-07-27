@@ -694,16 +694,7 @@ class KeaTestRunner(TextTestRunner, KeaOptionSetter, SetUpClassExtension):
                 if "self.flutter" in str(inspect.getsource(test_method) if inspect else "") or hasattr(t, "flutter"):
                     has_flutter_reference = True
 
-        if has_flutter_reference and not self.options.flutter:
-            try:
-                import u2_flutter
-            except ImportError:
-                raise ImportError(
-                    "Flutter-decorated test cases were detected, but u2_flutter is not installed.\n"
-                    "Install it with: pip install u2-flutter"
-                )
-            logger.info("Automatically detected Flutter test case requirements (@with_flutter / self.flutter). Enabling Flutter driver mode.")
-            self.options.flutter = True
+
 
         # Print errors caused by ImportError
         _result.printErrors()
