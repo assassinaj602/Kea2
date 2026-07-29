@@ -32,28 +32,27 @@ def create_device_snapshots(options: "Options") -> None:
     """
 
     for pkg in options.packageNames:
-        src = f"/sdcard/fastbot_{pkg}.fbm"
-        dst = f"/sdcard/fastbot_{pkg}.snapshot.fbm"
+        for suffix, snapshot_suffix in (("", ".snapshot.fbm"), (".static", ".static.snapshot.fbm")):
+            src = f"/sdcard/fastbot_{pkg}{suffix}.fbm"
+            dst = f"/sdcard/fastbot_{pkg}{snapshot_suffix}"
 
-        try:
-            # Check src existence
-            check_cmd = f'test -f "{src}" && echo OK || echo NO'
-            check_src = ADBDevice().shell(check_cmd)
-            if not (isinstance(check_src, str) and "OK" in check_src):
-                print(f"Source FBM not found on device for package {pkg}: {src}. Skipping snapshot creation.", flush=True)
+            try:
+                check_cmd = f'test -f "{src}" && echo OK || echo NO'
+                check_src = ADBDevice().shell(check_cmd)
+                if not (isinstance(check_src, str) and "OK" in check_src):
+                    print(f"Source FBM not found on device for package {pkg}: {src}. Skipping snapshot creation.", flush=True)
+                    continue
+            except Exception as e:
+                logger.error(f"Failed to verify source FBM existence for {pkg}: {e}. Skipping.")
                 continue
-        except Exception as e:
-            logger.error(f"Failed to verify source FBM existence for {pkg}: {e}. Skipping.")
-            continue
-        
-        ADBDevice().shell(f'cp "{src}" "{dst}"')
 
-        # verify snapshot exists
-        verify_cmd = f'test -f "{dst}" && echo OK || echo NO'
-        r = ADBDevice().shell(verify_cmd)
-        if not "OK" in r:
-            raise FBMSanapshotCreationError("Failed to create ")
-        logger.info(f"Snapshot created on device for package {pkg}: {dst}")
+            ADBDevice().shell(f'cp "{src}" "{dst}"')
+
+            verify_cmd = f'test -f "{dst}" && echo OK || echo NO'
+            r = ADBDevice().shell(verify_cmd)
+            if not "OK" in r:
+                raise FBMSanapshotCreationError("Failed to create ")
+            logger.info(f"Snapshot created on device for package {pkg}: {dst}")
             
 
 

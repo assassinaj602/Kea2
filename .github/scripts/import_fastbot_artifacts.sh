@@ -21,27 +21,7 @@ copy_file() {
   echo "Imported $dst"
 }
 
-copy_optional_file() {
-  local src="$1"
-  local dst="$2"
-  if [[ -f "$src" ]]; then
-    install -D -m 0644 "$src" "$dst"
-    echo "Imported $dst"
-  else
-    echo "Optional Fastbot artifact not found, skipping: $src"
-  fi
-}
-
 copy_file "$FASTBOT_ANDROID_DIR/monkeyq.jar" "$ASSETS_DIR/monkeyq.jar"
-
-if [[ -f "$FASTBOT_ANDROID_DIR/monkey/build/libs/kea2-thirdpart.jar" ]]; then
-  copy_file "$FASTBOT_ANDROID_DIR/monkey/build/libs/kea2-thirdpart.jar" "$ASSETS_DIR/kea2-thirdpart.jar"
-else
-  copy_file "$FASTBOT_ANDROID_DIR/kea2-thirdpart.jar" "$ASSETS_DIR/kea2-thirdpart.jar"
-fi
-
-copy_optional_file "$FASTBOT_ANDROID_DIR/fastbot-thirdpart.jar" "$ASSETS_DIR/fastbot-thirdpart.jar"
-copy_optional_file "$FASTBOT_ANDROID_DIR/framework.jar" "$ASSETS_DIR/framework.jar"
 
 for abi in "${ABIS[@]}"; do
   copy_file \
@@ -63,9 +43,6 @@ metadata = {
     "artifacts": {
         "jars": [
             "kea2/assets/monkeyq.jar",
-            "kea2/assets/kea2-thirdpart.jar",
-            "kea2/assets/fastbot-thirdpart.jar",
-            "kea2/assets/framework.jar",
         ],
         "native_libraries": [
             "kea2/assets/fastbot_libs/armeabi-v7a/libfastbot_native.so",

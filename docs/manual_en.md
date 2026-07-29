@@ -173,10 +173,21 @@ You can launch Kea2 by shell commands `kea2 run`.
 | --post-failure-screenshots | Dump n screenshots after failure. Should be smaller than `--pre-failure-screenshots`. This option is only valid when `--take-screenshots` is set.                                                                                                                     | `0` |
 | --restart-app-period       | The period (in the numbers of monkey events) to restart the app under test.                                                                                                                                                                                           | `0` (never restart) |
 | --fastbot-agent            | Fastbot agent strategy. Available options: `double-sarsa`, `sarsa`. | `double-sarsa` |
+| --fastbot-so-version       | Use a historical Fastbot native SO version and download it automatically. Use a Git tag such as `v1.2.3` (recommended) or a commit SHA. | SO libraries bundled with the current Kea2 version |
 | --device-output-root       | The root of device output dir. Kea2 will temporarily save the screenshots and result log into `"<device-output-root>/output_*********/"`. Make sure the root dir can be access.                                                                                       | `/sdcard` |
 | --act-whitelist-file       | Activity WhiteList File. You can pass a custom path, or omit the value to use `/sdcard/.kea2/awl.strings`.                                                                                                                                                            | |
 | --act-blacklist-file       | Activity BlackList File. You can pass a custom path, or omit the value to use `/sdcard/.kea2/abl.strings`.                                                                                                                                                            | |
 | --merge-fbm                | Enable FBM merge at startup. Pulls FBM(s) from the device and merges with local PC FBM data. The FBM file path on the local PC is in `configs/merge_fbm`.                                                                                                             | |
+
+#### Historical Fastbot SO versions
+
+By default, Kea2 pushes the Fastbot native SO libraries bundled with the current Kea2 version. To use a historical version, pass `--fastbot-so-version` with its Git tag. The usual tag format is `v1.2.3` (including the `v`):
+
+```bash
+kea2 run -p com.example.app --fastbot-so-version v1.2.3
+```
+
+Kea2 downloads any missing ABI libraries to the local cache before pushing them to the device. The log records the SO version being pushed. A commit SHA is also accepted when a tag is unavailable.
 
 ### 1.2 Sub-commands and their arguments
 Kea2 supports 3 sub-commands: `propertytest`, `unittest`, and `--` (extra arguments).

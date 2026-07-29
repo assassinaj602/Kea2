@@ -5,9 +5,6 @@ on:
     types: [opened, synchronize, reopened, edited, ready_for_review]
     paths-ignore:
       - "kea2/assets/fastbot3-build.json"
-      - "kea2/assets/fastbot-thirdpart.jar"
-      - "kea2/assets/framework.jar"
-      - "kea2/assets/kea2-thirdpart.jar"
       - "kea2/assets/monkeyq.jar"
       - "kea2/assets/fastbot_libs/**"
   workflow_dispatch:
@@ -125,14 +122,14 @@ jobs:
           FASTBOT3_COMMIT: ${{ steps.fastbot.outputs.commit }}
           FASTBOT3_SHORT_COMMIT: ${{ steps.fastbot.outputs.short_commit }}
         run: |
-          if git diff --quiet -- kea2/assets/fastbot3-build.json kea2/assets/*.jar kea2/assets/fastbot_libs; then
+          if git diff --quiet -- kea2/assets/fastbot3-build.json kea2/assets/monkeyq.jar kea2/assets/fastbot_libs; then
             echo "Fastbot artifacts are unchanged."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add kea2/assets/fastbot3-build.json kea2/assets/*.jar kea2/assets/fastbot_libs
+          git add kea2/assets/fastbot3-build.json kea2/assets/monkeyq.jar kea2/assets/fastbot_libs
           git commit \
             -m "Update Fastbot3 artifacts from ${FASTBOT3_SHORT_COMMIT}" \
             -m "Fastbot3-Commit: ${FASTBOT3_COMMIT}"

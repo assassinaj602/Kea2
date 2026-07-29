@@ -18,7 +18,10 @@ import logging
 logging.getLogger("urllib3").setLevel(logging.INFO)
 logging.getLogger("uiautomator2").setLevel(logging.INFO)
 
-logger = getLogger(__name__) 
+logger = getLogger(__name__)
+
+U2_SERVER_PORT = 9008
+KEA2_PROXY_PORT = 8090
 
 """
 The definition of U2ScriptDriver
@@ -54,20 +57,47 @@ class U2ScriptDriver:
             print("[INFO] Connecting to uiautomator2. Please wait ...")
             self.d = u2.connect(adb)
             sleep(5)
-        self.d._device_server_port = 8090
+            self._patch_u2_lifecycle_ports()
+        self.d._device_server_port = KEA2_PROXY_PORT
         return self.d
+
+    def _patch_u2_lifecycle_ports(self):
+        if getattr(self.d, "_kea2_lifecycle_port_patched", False):
+            return
+
+        original_start_uiautomator = self.d.start_uiautomator
+        original_stop_uiautomator = self.d.stop_uiautomator
+
+        def call_with_u2_server_port(func, *args, **kwargs):
+            origin_port = self.d._device_server_port
+            try:
+                self.d._device_server_port = U2_SERVER_PORT
+                return func(*args, **kwargs)
+            finally:
+                self.d._device_server_port = origin_port
+
+        def start_uiautomator(*args, **kwargs):
+            return call_with_u2_server_port(original_start_uiautomator, *args, **kwargs)
+
+        def stop_uiautomator(*args, **kwargs):
+            return call_with_u2_server_port(original_stop_uiautomator, *args, **kwargs)
+
+        self.d.start_uiautomator = start_uiautomator
+        self.d.stop_uiautomator = stop_uiautomator
+        self.d._kea2_lifecycle_port_patched = True
 
     def tearDown(self):
         logger.debug("U2Driver tearDown: stop_uiautomator")
         if self.d is None:
             return
         try:
-            self.d._device_server_port = 9008
             self.d.stop_uiautomator()
         except (OSError, AttributeError, RuntimeError) as e:
             logger.debug(f"Error during uiautomator teardown (may be already closed): {e}")
         except Exception as e:
             logger.warning(f"Unexpected error during uiautomator teardown: {e}")
+        finally:
+            self.d._device_server_port = KEA2_PROXY_PORT
 
 """
 The definition of U2StaticChecker
@@ -558,7 +588,7 @@ class U2Driver:
         if cls.scriptDriver is None:
             cls.scriptDriver = U2ScriptDriver()
         _instance = cls.scriptDriver.getInstance()
-        _instance._device_server_port = 9008 if mode == "direct" else 8090
+        _instance._device_server_port = U2_SERVER_PORT if mode == "direct" else KEA2_PROXY_PORT
         return _instance
 
     @classmethod

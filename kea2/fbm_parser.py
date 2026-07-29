@@ -571,109 +571,133 @@ class FBMMerger:
     def _remote_fbm_path(self, package_name: str) -> str:
         return f"/sdcard/fastbot_{package_name}.fbm"
 
+    def _safe_remove_path(self, pathlike):
+        """Remove file or directory safely."""
+        from pathlib import Path
+        import shutil
+        p = Path(pathlike)
+        try:
+            if p.exists():
+                if p.is_dir():
+                    shutil.rmtree(p)
+                else:
+                    p.unlink()
+        except Exception as e:
+            print(f"Warning: failed to remove {p}: {e}")
 
-    def pull_and_merge_to_pc(self, package_name: str, device: str = None, transport_id: str = None):
-        """Pull device FBM for package and merge it into PC fbm (PC file will be updated).
-
-        Returns True on success (or if nothing to do), False on failure.
+    def _pull_and_merge_fbm_variant(self, package_name: str, suffix: str = "", device: str = None, transport_id: str = None) -> bool:
+        """Pull & merge single FBM variant (dynamic or static).
+        
+        suffix: "" for dynamic, ".static" for static
+        Returns True if success, False if file not found or failed.
         """
         try:
-            # Use upstream adbutils directly (avoids relying on removed wrapper helpers)
             from adbutils import adb
             dev = adb.device(device) if device else adb.device()
         except Exception as e:
-            print("ADB utilities (adbutils) not available:", e)
+            print(f"ADB utilities not available: {e}")
             return False
 
         pc_dir = self._pc_dir
         pc_dir.mkdir(parents=True, exist_ok=True)
-        pc_file = pc_dir / f"fastbot_{package_name}.fbm"
-        # generate a short random suffix for all intermediate files to avoid clashes between processes
+
         rand = uuid.uuid4().hex[:8]
-        pulled_tmp = pc_dir / f"fastbot_{package_name}.from_device.{rand}.fbm"
-        merged_tmp = pc_dir / f"fastbot_{package_name}.merged.{rand}.fbm"
+        remote = f"/sdcard/fastbot_{package_name}{suffix}.fbm"
+        snapshot_remote = f"/sdcard/fastbot_{package_name}{suffix}.snapshot.fbm"
+        pc_file = pc_dir / f"fastbot_{package_name}{suffix}.fbm"
+        pulled_tmp = pc_dir / f"fastbot_{package_name}{suffix}.from_device.{rand}.fbm"
+        pulled_snap_tmp = pc_dir / f"fastbot_{package_name}{suffix}.snapshot.from_device.{rand}.fbm"
+        delta_tmp = pc_dir / f"fastbot_{package_name}{suffix}.delta.{rand}.fbm"
 
-        remote = self._remote_fbm_path(package_name)
         try:
-            print(f"Attempting to pull {remote} to {pulled_tmp}")
-            dev.sync.pull(remote, str(pulled_tmp))
-        except Exception as e:
-            print(f"dev.sync.pull failed for {remote}: {e}")
-
-        if not pulled_tmp.exists() or pulled_tmp.stat().st_size == 0:
-            print(f"No FBM on device for {package_name}, nothing merged to PC.")
+            # === KEY: Check if file exists on device BEFORE pull ===
+            # This prevents pull from creating directories on failure
             try:
-                if pulled_tmp.exists():
-                    pulled_tmp.unlink()
+                check_result = dev.shell(f'test -f "{remote}" && echo OK || echo NO')
+                if "OK" not in str(check_result):
+                    print(f"Source FBM not found on device: {remote}")
+                    return False
+            except Exception as e:
+                print(f"Failed to check {remote}: {e}")
+                return False
+
+            # === Pull ===
+            try:
+                print(f"Attempting to pull {remote} to {pulled_tmp}")
+                dev.sync.pull(remote, str(pulled_tmp))
+            except Exception as e:
+                print(f"dev.sync.pull failed for {remote}: {e}")
+                return False
+
+            # === Verify pulled file ===
+            if not pulled_tmp.exists() or pulled_tmp.is_dir() or pulled_tmp.stat().st_size == 0:
+                print(f"No valid FBM on device for {package_name}{suffix}")
+                return False
+
+            # === Pull snapshot (optional) ===
+            pulled_snap_tmp_valid = False
+            try:
+                check_snap = dev.shell(f'test -f "{snapshot_remote}" && echo OK || echo NO')
+                if "OK" in str(check_snap):
+                    dev.sync.pull(snapshot_remote, str(pulled_snap_tmp))
+                    if pulled_snap_tmp.exists() and not pulled_snap_tmp.is_dir() and pulled_snap_tmp.stat().st_size > 0:
+                        pulled_snap_tmp_valid = True
             except Exception:
                 pass
-            return False
 
-        # --- Try snapshot/delta workflow first ---
-        snapshot_remote = f"/sdcard/fastbot_{package_name}.snapshot.fbm"
-        pulled_snap_tmp = pc_dir / f"fastbot_{package_name}.snapshot.from_device.{rand}.fbm"
-        delta_tmp = pc_dir / f"fastbot_{package_name}.delta.{rand}.fbm"
-        try:
-            # attempt to pull snapshot (may fail silently)
-            try:
-                dev.sync.pull(snapshot_remote, str(pulled_snap_tmp))
-            except Exception:
-                # snapshot may not exist on device; ignore error and proceed (treat as empty)
-                pass
-
-            # Compute delta using snapshot if it exists, otherwise treat snapshot as empty (delta == current)
-            snapshot_path = str(pulled_snap_tmp) if pulled_snap_tmp.exists() and pulled_snap_tmp.stat().st_size > 0 else None
+            # === Compute delta ===
+            snapshot_path = str(pulled_snap_tmp) if pulled_snap_tmp_valid else None
+            variant_name = suffix or "dynamic"
             if snapshot_path:
-                print(f"Snapshot found on device for {package_name}, computing delta -> {delta_tmp}")
+                print(f"Computing delta for {variant_name} {package_name}")
             else:
-                print(f"No snapshot on device for {package_name}; treating snapshot as empty -> computing delta -> {delta_tmp}")
+                print(f"No snapshot for {variant_name} {package_name}; treating as empty")
 
             ok = self.compute_delta(snapshot_path, str(pulled_tmp), str(delta_tmp))
             if not ok:
-                print("Delta computation failed; not performing merge.")
+                print(f"Delta computation failed for {variant_name} {package_name}")
                 return False
 
-            print(f"Applying delta to PC core fbm: {delta_tmp} -> {pc_file}")
-            # apply_delta_to_pc will perform necessary locking around pc_file operations
+            # === Apply delta ===
+            print(f"Applying delta for {variant_name} {package_name} to {pc_file}")
             applied = self.apply_delta_to_pc(str(pc_file), str(delta_tmp))
             if applied:
-                print(f"[FBM] delta applied to PC for package '{package_name}'")
+                print(f"✓ {variant_name} FBM merged for {package_name}")
                 return True
             else:
-                print("Applying delta failed; not performing merge.")
+                print(f"✗ Failed to apply delta for {variant_name} {package_name}")
                 return False
+
         finally:
-            # cleanup
-            try:
-                if pulled_tmp.exists():
-                    pulled_tmp.unlink()
-            except Exception:
-                pass
-            try:
-                if merged_tmp.exists():
-                    merged_tmp.unlink()
-            except Exception:
-                pass
-            try:
-                if pulled_snap_tmp.exists():
-                    pulled_snap_tmp.unlink()
-            except Exception:
-                pass
-            try:
-                if delta_tmp.exists():
-                    delta_tmp.unlink()
-            except Exception:
-                pass
+            # Cleanup (safe delete files or directories)
+            for p in [pulled_tmp, pulled_snap_tmp, delta_tmp]:
+                try:
+                    self._safe_remove_path(p)
+                except Exception as e:
+                    # Best-effort cleanup: do not fail merge flow on cleanup errors.
+                    print(f"Cleanup warning: failed to remove {p}: {e}")
+
+    def pull_and_merge_to_pc(self, package_name: str, device: str = None, transport_id: str = None):
+        """Pull & merge both dynamic and static FBMs for package.
+        
+        Returns True if at least one variant succeeded, False otherwise.
+        """
+        results = []
+        for suffix in ["", ".static"]:
+            result = self._pull_and_merge_fbm_variant(package_name, suffix=suffix, device=device, transport_id=transport_id)
+            results.append(result)
+        
+        return any(results)
 
     # --- New workflow helpers ---
-    def create_device_snapshot(self, package_name: str, snapshot_remote: str = None, device: str = None, transport_id: str = None) -> bool:
+    def create_device_snapshot(self, package_name: str, snapshot_remote: str = None, device: str = None, transport_id: str = None, model_suffix: str = "") -> bool:
         """Create an on-device snapshot (copy) of the fbm file.
 
         Attempts `adb shell cp <src> <dst>` first, falls back to pull/push if cp is not available.
         Returns True on success.
         """
-        src = self._remote_fbm_path(package_name)
-        dst = snapshot_remote or f"/sdcard/fastbot_{package_name}.snapshot.fbm"
+        src = f"/sdcard/fastbot_{package_name}{model_suffix}.fbm"
+        dst = snapshot_remote or f"/sdcard/fastbot_{package_name}{model_suffix}.snapshot.fbm"
         try:
             # Prefer using adbutils directly for shell commands
             from adbutils import adb
@@ -691,7 +715,7 @@ class FBMMerger:
             print(f"adb shell cp failed ({e}), trying pull/push fallback")
             # fallback: pull then push to dst
             try:
-                pc_tmp = os.path.join(self._pc_dir, f"fastbot_{package_name}.snapshot.from_device.fbm")
+                pc_tmp = os.path.join(self._pc_dir, f"fastbot_{package_name}{model_suffix}.snapshot.from_device.fbm")
                 dev.sync.pull(src, pc_tmp)
                 dev.sync.push(pc_tmp, dst)
                 try:

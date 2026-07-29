@@ -143,6 +143,8 @@ class Options:
     act_blacklist_file: str = None
     # Fastbot Agent
     fastbot_agent: Literal["double-sarsa", "sarsa"] = "double-sarsa"
+    # Optional Git tag or commit ref for downloaded Fastbot native SO libraries
+    fastbot_so_version: str = None
     # propertytest sub-commands args (eg. discover -s xxx -p xxx)
     propertytest_args: List[str] = None
     # period (N steps) to restart the app under test
@@ -551,6 +553,12 @@ class KeaTestRunner(TextTestRunner, KeaOptionSetter, SetUpClassExtension):
                 log_watcher.close()
                 result.has_crash_or_anr = log_watcher.has_crash_or_anr
 
+                for hook in list(getattr(self, "_before_summary_hooks", [])):
+                    try:
+                        hook()
+                    except Exception:
+                        logger.exception("before_summary hook failed")
+
                 result.logSummary()
                 self._generate_bug_report()
 
@@ -604,8 +612,7 @@ class KeaTestRunner(TextTestRunner, KeaOptionSetter, SetUpClassExtension):
                 except Exception as e:
                     logger.error(f"Error when checking precond: {propName}")
                     traceback.print_exc()
-                    valid = False
-                    break
+                    raise KeaRuntimeError(f"Error when checking precond: {propName}") from e
             # if all the precond passed. make it the candidate prop.
             if valid:
                 result.addPropertyPrecondSatisfied(test)
@@ -729,18 +736,20 @@ class KeaTestRunner(TextTestRunner, KeaOptionSetter, SetUpClassExtension):
            """
         def _get_xpath_widgets(func):
             blocked_set = set()
-            script_driver = U2Driver.getScriptDriver()
+            # use static checker for precond analysis for block widgets.
+            # Need to be tested.
+            checker = U2Driver.getStaticChecker() if U2Driver.staticChecker is not None else U2Driver.getScriptDriver()
             preconds = getattr(func, PRECONDITIONS_MARKER, [])
 
             def preconds_pass(preconds):
                 try:
-                    return all(precond(script_driver) for precond in preconds)
+                    return all(precond(checker) for precond in preconds)
                 except u2.UiObjectNotFoundError as e:
                     return False
                 except Exception as e:
                     logger.error(f"Error processing precond. Check if precond: {e}")
                     traceback.print_exc()
-                    return False
+                    raise KeaRuntimeError("Error processing block widget precondition.") from e
 
             if preconds_pass(preconds):
                 try:
