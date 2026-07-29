@@ -12,6 +12,7 @@ from packaging.version import parse as parse_version
 from .utils import getLogger, getProjectRoot
 from .adbUtils import ADBDevice, ADBStreamShell_V2
 from .fastbot_so_downloader import ensure_libraries
+from .version_manager import get_cur_version
 
 
 from typing import IO, TYPE_CHECKING, Dict
@@ -153,7 +154,7 @@ class FastbotManager:
             logger.info("Pushing Fastbot native SO libraries to device (version: %s).", so_version)
         else:
             native_lib_dir = cur_dir / "assets/fastbot_libs"
-            logger.info("Pushing Fastbot native SO libraries to device (version: current bundled).")
+            logger.info("Pushing Fastbot native SO libraries to device (version: %s).", get_cur_version())
         self.dev.sync.push(
             Path.joinpath(cur_dir, "assets/monkeyq.jar"),
             "/sdcard/monkeyq.jar"
