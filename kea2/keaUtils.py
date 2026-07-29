@@ -143,6 +143,8 @@ class Options:
     act_blacklist_file: str = None
     # Fastbot Agent
     fastbot_agent: Literal["double-sarsa", "sarsa"] = "double-sarsa"
+    # Optional Git tag or commit ref for downloaded Fastbot native SO libraries
+    fastbot_so_version: str = None
     # propertytest sub-commands args (eg. discover -s xxx -p xxx)
     propertytest_args: List[str] = None
     # period (N steps) to restart the app under test
