@@ -172,6 +172,15 @@ def _set_runner_parser(subparsers: "argparse._SubParsersAction[argparse.Argument
         help="Fastbot agent strategy.",
     )
 
+    parser.add_argument(
+        "--fastbot-so-version",
+        dest="fastbot_so_version",
+        type=str,
+        required=False,
+        default=None,
+        help="Use a historical Fastbot native SO version and download it automatically (e.g., v1.2.3; Git tag or commit SHA).",
+    )
+
 
     parser.add_argument(
         "--act-whitelist-file",
@@ -312,6 +321,7 @@ def run(args=None) -> ReturnCode:
         extra_args=args.extra,
         merge_fbm=args.merge_fbm,
         fastbot_agent=args.fastbot_agent,
+        fastbot_so_version=args.fastbot_so_version,
     )
 
 

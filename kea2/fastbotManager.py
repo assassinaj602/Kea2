@@ -11,6 +11,7 @@ from packaging.version import parse as parse_version
 
 from .utils import getLogger, getProjectRoot
 from .adbUtils import ADBDevice, ADBStreamShell_V2
+from .fastbot_so_downloader import ensure_libraries
 
 
 from typing import IO, TYPE_CHECKING, Dict
@@ -146,6 +147,13 @@ class FastbotManager:
     def _push_libs(self):
         logger.info("Pushing Fastbot libraries to device...")
         cur_dir = Path(__file__).parent
+        so_version = self.options.fastbot_so_version
+        if so_version:
+            native_lib_dir = ensure_libraries(so_version, progress=logger.info)
+            logger.info("Pushing Fastbot native SO libraries to device (version: %s).", so_version)
+        else:
+            native_lib_dir = cur_dir / "assets/fastbot_libs"
+            logger.info("Pushing Fastbot native SO libraries to device (version: current bundled).")
         self.dev.sync.push(
             Path.joinpath(cur_dir, "assets/monkeyq.jar"),
             "/sdcard/monkeyq.jar"
@@ -163,19 +171,19 @@ class FastbotManager:
             "/sdcard/framework.jar",
         )
         self.dev.sync.push(
-            Path.joinpath(cur_dir, "assets/fastbot_libs/arm64-v8a/libfastbot_native.so"),
+            native_lib_dir / "arm64-v8a/libfastbot_native.so",
             "/data/local/tmp/arm64-v8a/libfastbot_native.so",
         )
         self.dev.sync.push(
-            Path.joinpath(cur_dir, "assets/fastbot_libs/armeabi-v7a/libfastbot_native.so"),
+            native_lib_dir / "armeabi-v7a/libfastbot_native.so",
             "/data/local/tmp/armeabi-v7a/libfastbot_native.so",
         )
         self.dev.sync.push(
-            Path.joinpath(cur_dir, "assets/fastbot_libs/x86/libfastbot_native.so"),
+            native_lib_dir / "x86/libfastbot_native.so",
             "/data/local/tmp/x86/libfastbot_native.so",
         )
         self.dev.sync.push(
-            Path.joinpath(cur_dir, "assets/fastbot_libs/x86_64/libfastbot_native.so"),
+            native_lib_dir / "x86_64/libfastbot_native.so",
             "/data/local/tmp/x86_64/libfastbot_native.so",
         )
 
@@ -248,4 +256,3 @@ class FastbotManager:
 
     def join(self):
         self.thread.join()
-

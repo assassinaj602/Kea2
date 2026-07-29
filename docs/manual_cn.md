@@ -163,9 +163,20 @@ def test_func1(self):
 | --post-failure-screenshots | 失败后截取的截图数量。应小于等于 `--pre-failure-screenshots`。该选项仅在 `--take-screenshots` 设置时有效。 | `0` |
 | --restart-app-period | 运行过程中重启被测应用的周期（随机事件数）。 | `0`（不重启） |
 | --fastbot-agent | Fastbot Agent 策略，可选：`double-sarsa`、`sarsa`。 | `double-sarsa` |
+| --fastbot-so-version | 使用历史版本的 Fastbot native SO，并自动下载。推荐传 Git tag，例如 `v1.2.3`；也可传 commit SHA。 | 当前版本 SO 库 |
 | --device-output-root | 设备输出目录根路径，Kea2 将暂存截图和结果日志到 `"<device-output-root>/output_*********/"`。确保该目录可访问。 | `/sdcard` |
 | --act-whitelist-file | Activity 白名单文件。可传自定义路径；若只写参数名不带值，则默认 `/sdcard/.kea2/awl.strings`。 |  |
 | --act-blacklist-file | Activity 黑名单文件。可传自定义路径；若只写参数名不带值，则默认 `/sdcard/.kea2/abl.strings`。 |  |
+
+#### 使用历史版本 Fastbot SO
+
+默认情况下，Kea2 推送安装包中内置的 Fastbot native SO。需要使用历史版本时，通过 `--fastbot-so-version` 指定对应的 Git tag。常用格式为 `v1.2.3`（包含前缀 `v`）：
+
+```bash
+kea2 run -p com.example.app --fastbot-so-version v1.2.3
+```
+
+Kea2 会在推送到设备前将缺失 ABI 的 SO 下载到本地缓存。日志会记录实际推送的 SO 版本。没有对应 tag 时，也可以传 commit SHA。
 
 ### 1.2 子命令及其参数
 
