@@ -294,6 +294,7 @@ Please see the [user manual](/docs/manual_en.md) for more details on how to use 
 
 
 ## :mega: News & Media
+- [Kea2: Practical Property-based Testing for Mobile Apps](https://dl.acm.org/doi/10.1145/3803437.3806416) has been accepted at FSE 2026.
 -  [Property-driven Testing Technology: Next-generation GUI Automated Testing](https://appw8oh6ysg4044.xet.citv.cn/p/course/video/v_6882fa14e4b0694ca0ec0a1b) - Video replay and slides @ MTSC 2025
 - [Let's GoSSIP 2025 Software Security Summer School: Kea2 (Preview #1)](https://mp.weixin.qq.com/s/8_0_GNNin8E5BqTbJU33wg)
 
@@ -340,15 +341,50 @@ What Kea2 has changed:
 
 ## Relevant papers of Kea2
 
-> Kea2: Practical Property-based Testing for Mobile Apps. FSE 2026 (tool demo). [pdf](https://tingsu.github.io/files/fse26-Kea2.pdf)
+- [Kea2: Practical Property-based Testing for Mobile Apps](https://tingsu.github.io/files/fse26-Kea2.pdf). FSE 2026.
+- [General and Practical Property-based Testing for Android Apps](https://dl.acm.org/doi/10.1145/3691620.3694986). ASE 2024.
+- [An Empirical Study of Functional Bugs in Android Apps](https://dl.acm.org/doi/10.1145/3597926.3598138). ISSTA 2023.
+- [Fastbot2: Reusable Automated Model-based GUI Testing for Android Enhanced by Reinforcement Learning](https://dl.acm.org/doi/10.1145/3551349.3559505). ASE 2022.
+- [Guided, Stochastic Model-Based GUI Testing of Android Apps](https://dl.acm.org/doi/10.1145/3106237.3106298). ESEC/FSE 2017.
 
-> General and Practical Property-based Testing for Android Apps. ASE 2024. [pdf](https://dl.acm.org/doi/10.1145/3691620.3694986)
+## Reference This
 
-> An Empirical Study of Functional Bugs in Android Apps. ISSTA 2023. [pdf](https://dl.acm.org/doi/10.1145/3597926.3598138)
+```bibtex
+@inproceedings{10.1145/3803437.3806416,
+  author = {Liang, Xixian and Peng, Cheng and Ma, Bo and Shen, Xiangchen and Xiong, Yiheng and Su, Ting},
+  title = {Kea2: Practical Property-based Testing for Mobile Apps},
+  year = {2026},
+  isbn = {9798400726361},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  url = {https://doi.org/10.1145/3803437.3806416},
+  doi = {10.1145/3803437.3806416},
+  abstract = {Validating functional correctness of mobile apps is challenging for manual testing and automated UI testing (limited to simple crashing bugs). Property-based testing is promising to tackle this challenge given functional properties. To this end, we introduce Kea2, a practical property-based testing tool for apps: (1) specifying properties in Python with enough flexibility and expressiveness; and (2) reusing existing GUI fuzzing techniques to support effective property checking. Indeed, Kea2 can find functional (logic) bugs in real-world apps. Kea2 has been open-sourced at https://github.com/ecnusse/Kea2 (a demo video: https://youtu.be/HS4rTCcaSPE), and received positive feedback for its usability and features.},
+  booktitle = {Proceedings of the 34th ACM International Conference on the Foundations of Software Engineering},
+  pages = {182--186},
+  numpages = {5},
+  location = {Concordia University, Montreal, QC, Canada},
+  series = {FSE Companion '26}
+}
 
-> Fastbot2: Reusable Automated Model-based GUI Testing for Android Enhanced by Reinforcement Learning. ASE 2022. [pdf](https://dl.acm.org/doi/10.1145/3551349.3559505)
-
-> Guided, Stochastic Model-Based GUI Testing of Android Apps. ESEC/FSE 2017.  [pdf](https://dl.acm.org/doi/10.1145/3106237.3106298)
+@inproceedings{10.1145/3691620.3694986,
+  author = {Xiong, Yiheng and Su, Ting and Wang, Jue and Sun, Jingling and Pu, Geguang and Su, Zhendong},
+  title = {General and Practical Property-based Testing for Android Apps},
+  year = {2024},
+  isbn = {9798400712487},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  url = {https://doi.org/10.1145/3691620.3694986},
+  doi = {10.1145/3691620.3694986},
+  abstract = {Finding non-crashing functional bugs for Android apps is challenging for both manual testing and automated GUI testing techniques. This paper introduces and designs a general and practical testing technique based on the idea of property-based testing for finding such bugs. Specifically, our technique incorporates (1) a property description language (PDL) to allow specifying desired app properties, and (2) two exploration strategies as the input generators for effectively validating the properties. We implemented our technique as a tool named Kea and evaluated it on 124 historical bugs from eight real-world, popular Android apps. Our evaluation shows that our PDL can specify all the app properties violated by these historical bugs, demonstrating its generability for finding functional bugs. Kea successfully found 66 (68.0\%) and 92 (94.8\%) of the 97 historical bugs in scope under the two exploration strategies, demonstrating its practicability. Moreover, Kea found 25 new functional bugs on the latest versions of these eight apps, given the specified properties. To date, all these bugs have been confirmed, and 21 have been fixed. In comparison, prior state-of-the-art techniques found only 13 (13.4\%) historical bugs and 1 new bug. We have made all the artifacts publicly available at https://github.com/ecnusse/Kea.},
+  booktitle = {Proceedings of the 39th IEEE/ACM International Conference on Automated Software Engineering},
+  pages = {53--64},
+  numpages = {12},
+  keywords = {property-based testing, Android app testing, non-crashing functional bugs},
+  location = {Sacramento, CA, USA},
+  series = {ASE '24}
+}
+```
 
 
 ## Contact us
@@ -389,7 +425,13 @@ See [Developer guide](DEVELOP.md) for more details.
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=ecnusse/Kea2&type=Date)](https://www.star-history.com/#ecnusse/Kea2&Date)
+<a href="https://www.star-history.com/?repos=ecnusse%2FKea2&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=ecnusse/Kea2&type=date&theme=dark&legend=top-left&sealed_token=xTcIgy9M4-i1Mr8zkwwExXKPfdDt_DgnpqzwY0RmpjKOULbHx7gXFOS1TTK2hBEvOCP4eVjjyu2ALDTuY9_d8DJPNcJGOv9q76oThj3i4WGYlbmg_aWRYhhDTScCnclZ0rwnz6XxeRaUE9dr_VBXz-GUctDCChip2TlhLfqNuMordyyLufyORBbeC7T9" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=ecnusse/Kea2&type=date&legend=top-left&sealed_token=xTcIgy9M4-i1Mr8zkwwExXKPfdDt_DgnpqzwY0RmpjKOULbHx7gXFOS1TTK2hBEvOCP4eVjjyu2ALDTuY9_d8DJPNcJGOv9q76oThj3i4WGYlbmg_aWRYhhDTScCnclZ0rwnz6XxeRaUE9dr_VBXz-GUctDCChip2TlhLfqNuMordyyLufyORBbeC7T9" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=ecnusse/Kea2&type=date&legend=top-left&sealed_token=xTcIgy9M4-i1Mr8zkwwExXKPfdDt_DgnpqzwY0RmpjKOULbHx7gXFOS1TTK2hBEvOCP4eVjjyu2ALDTuY9_d8DJPNcJGOv9q76oThj3i4WGYlbmg_aWRYhhDTScCnclZ0rwnz6XxeRaUE9dr_VBXz-GUctDCChip2TlhLfqNuMordyyLufyORBbeC7T9" />
+ </picture>
+</a>
 
 [^1]: Many UI automated testing tools provide “custom event sequence” features (such as [Fastbot](https://github.com/bytedance/Fastbot_Android/blob/main/handbook-cn.md#%E8%87%AA%E5%AE%9A%E4%B9%89%E4%BA%8B%E4%BB%B6%E5%BA%8F%E5%88%97) and [AppCrawler](https://github.com/seveniruby/AppCrawler)), but these features often have practical limitations, such as restricted flexibility and difficult maintenance. Many Fastbot users have reported issues with its custom event sequence capability, e.g., [#209](https://github.com/bytedance/Fastbot_Android/issues/209), [#225](https://github.com/bytedance/Fastbot_Android/issues/225), and [#286](https://github.com/bytedance/Fastbot_Android/issues/286).
 
