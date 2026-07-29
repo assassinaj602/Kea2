@@ -16,14 +16,9 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from kea2.fastbot_so_downloader import (
-    ABIS,
     GIT_REF_PATTERN,
     default_cache_dir,
     ensure_libraries,
-    is_valid_library,
-    library_path,
-    missing_abis,
-    raw_library_urls,
 )
 
 
