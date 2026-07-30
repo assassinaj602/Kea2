@@ -25,6 +25,7 @@
 - [高级功能 2：不变式检查](#高级功能-2不变式检查invariant-checks)
 - [高级功能 3：复用回归脚本](#高级功能-3复用回归脚本兼容已有脚本通过前置脚本步骤到达特定层次)
 - [高级功能 4：支持 WebView 操作](#高级功能-4支持-webview-操作)
+- [高级功能 5：支持 Flutter 交互](#高级功能-5支持-flutter-交互)
 ### 7. 实验性功能
 - [实验性功能1：FBM Merge（模型合并）](#实验性功能1fbm-merge模型合并)
 ### 8. 常见问题与技巧
@@ -699,7 +700,7 @@ class Sample_Test(unittest.TestCase):
 
 https://github.com/user-attachments/assets/f0e5c116-03da-41b0-8f12-c62620fc09a8
 
-#### 高级功能 5：支持 Flutter 交互
+## 高级功能 5：支持 Flutter 交互
 
 **简介**
 
