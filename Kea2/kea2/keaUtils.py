@@ -2,6 +2,7 @@ import random
 import warnings
 import types
 import traceback
+import inspect
 import json
 import os
 import functools
@@ -143,8 +144,6 @@ class Options:
     act_blacklist_file: str = None
     # Fastbot Agent
     fastbot_agent: Literal["double-sarsa", "sarsa"] = "double-sarsa"
-    # Optional Git tag or commit ref for downloaded Fastbot native SO libraries
-    fastbot_so_version: str = None
     # propertytest sub-commands args (eg. discover -s xxx -p xxx)
     propertytest_args: List[str] = None
     # period (N steps) to restart the app under test
@@ -155,6 +154,8 @@ class Options:
     extra_args: List[str] = None
     # Whether to pull device FBM(s) at start, merge with PC FBM and push merged back to device
     merge_fbm: bool = False
+    # Flutter mode enable
+    flutter: bool = False
 
     def __setattr__(self, name, value):
         if value is None:
@@ -431,8 +432,13 @@ class KeaTestRunner(TextTestRunner, KeaOptionSetter, SetUpClassExtension):
             result.flushResult()
             # setUp for the u2 driver
             self.scriptDriver = U2Driver.getScriptDriver(mode="proxy")
+            if self.options.flutter:
+                self.flutterScriptDriver = U2Driver.getFlutterScriptDriver()
 
             for test in {**self.allProperties, **self.allInvariants}.values():
+                setattr(test.__class__, self.options.driverName, self.scriptDriver)
+                if self.options.flutter:
+                    setattr(test.__class__, "flutter", self.flutterScriptDriver)
                 self.setUpClass(test)
 
             fb.check_alive()
@@ -495,12 +501,21 @@ class KeaTestRunner(TextTestRunner, KeaOptionSetter, SetUpClassExtension):
 
                     result.setCurrentStepsCount(self.stepsCount)
 
+                    # refresh Flutter static checker hierarchy
+                    if self.options.flutter:
+                        try:
+                            U2Driver.getFlutterStaticChecker().refresh_hierarchy()
+                        except Exception as e:
+                            logger.warning(f"Failed to refresh Flutter hierarchy: {e}")
+
                     # check all invariants
                     staticCheckerDriver = U2Driver.getStaticChecker(hierarchy=xml_raw)
                     if self.allInvariants:
                         print(f"[INFO] Checking {len(self.allInvariants)} invariants...", flush=True)
                     for _, test in self.allInvariants.items():
                         setattr(test, self.options.driverName, staticCheckerDriver)
+                        if self.options.flutter:
+                            setattr(test, "flutter", U2Driver.getFlutterStaticChecker())
                         try:
                             test(result)
                         finally:
@@ -528,6 +543,8 @@ class KeaTestRunner(TextTestRunner, KeaOptionSetter, SetUpClassExtension):
                     fb.logScript(result.lastPropertyInfo)
                     # Dependency Injection. driver when doing scripts
                     setattr(test, self.options.driverName, self.scriptDriver)
+                    if self.options.flutter:
+                        setattr(test, "flutter", U2Driver.getFlutterScriptDriver())
                     try:
                         test(result)
                     finally:
@@ -552,12 +569,6 @@ class KeaTestRunner(TextTestRunner, KeaOptionSetter, SetUpClassExtension):
                 print(f"Finish sending monkey events.", flush=True)
                 log_watcher.close()
                 result.has_crash_or_anr = log_watcher.has_crash_or_anr
-
-                for hook in list(getattr(self, "_before_summary_hooks", [])):
-                    try:
-                        hook()
-                    except Exception:
-                        logger.exception("before_summary hook failed")
 
                 result.logSummary()
                 self._generate_bug_report()
@@ -601,6 +612,8 @@ class KeaTestRunner(TextTestRunner, KeaOptionSetter, SetUpClassExtension):
             for precond in property.preconds:
                 # Dependency injection. Static driver checker for precond
                 setattr(test, self.options.driverName, staticCheckerDriver)
+                if self.options.flutter:
+                    setattr(test, "flutter", U2Driver.getFlutterStaticChecker())
                 # excecute the precondition
                 try:
                     if not precond(test):
@@ -612,7 +625,8 @@ class KeaTestRunner(TextTestRunner, KeaOptionSetter, SetUpClassExtension):
                 except Exception as e:
                     logger.error(f"Error when checking precond: {propName}")
                     traceback.print_exc()
-                    raise KeaRuntimeError(f"Error when checking precond: {propName}") from e
+                    valid = False
+                    break
             # if all the precond passed. make it the candidate prop.
             if valid:
                 result.addPropertyPrecondSatisfied(test)
@@ -661,15 +675,27 @@ class KeaTestRunner(TextTestRunner, KeaOptionSetter, SetUpClassExtension):
                     yield test
         # Traverse the TestCase to get all properties
         _result = TextTestResult(self.stream, self.descriptions, self.verbosity)
+        has_flutter_reference = False
         for t in iter_tests(test):
             # Find all the _FailedTest (Caused by ImportError) and directly run it to report errors
             if type(t).__name__ == "_FailedTest":
                 t(_result)
                 continue
+            
+            # Check for decorator markings or self.flutter usage
+            test_method = getattr(t, t._testMethodName)
             if hasattr(t, PRECONDITIONS_MARKER):
                 self.allProperties[getFullPropName(t)] = t
+                # If the property method itself or the class uses with_flutter or references self.flutter
+                if hasattr(test_method, "with_flutter") or "self.flutter" in str(inspect.getsource(test_method) if inspect else "") or hasattr(t, "flutter"):
+                    has_flutter_reference = True
             if hasattr(t, INVARIANT_MARKER):
                 self.allInvariants[getFullPropName(t)] = t
+                if "self.flutter" in str(inspect.getsource(test_method) if inspect else "") or hasattr(t, "flutter"):
+                    has_flutter_reference = True
+
+
+
         # Print errors caused by ImportError
         _result.printErrors()
 
@@ -736,20 +762,18 @@ class KeaTestRunner(TextTestRunner, KeaOptionSetter, SetUpClassExtension):
            """
         def _get_xpath_widgets(func):
             blocked_set = set()
-            # use static checker for precond analysis for block widgets.
-            # Need to be tested.
-            checker = U2Driver.getStaticChecker() if U2Driver.staticChecker is not None else U2Driver.getScriptDriver()
+            script_driver = U2Driver.getScriptDriver()
             preconds = getattr(func, PRECONDITIONS_MARKER, [])
 
             def preconds_pass(preconds):
                 try:
-                    return all(precond(checker) for precond in preconds)
+                    return all(precond(script_driver) for precond in preconds)
                 except u2.UiObjectNotFoundError as e:
                     return False
                 except Exception as e:
                     logger.error(f"Error processing precond. Check if precond: {e}")
                     traceback.print_exc()
-                    raise KeaRuntimeError("Error processing block widget precondition.") from e
+                    return False
 
             if preconds_pass(preconds):
                 try:
