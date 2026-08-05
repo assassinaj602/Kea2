@@ -266,6 +266,7 @@ class BugReportGenerator(CrashAnrMixin, PathParserMixin, ScreenshotsMixin):
 
 
         logger.info(f"Bug report saved to: {report_path}")
+        logger.info(f"""Test Duration {test_data["total_testing_time"]}. Total Events: {test_data["executed_events"]}""")
         return str(report_path)
 
     @catchException("Error when collecting test data")
