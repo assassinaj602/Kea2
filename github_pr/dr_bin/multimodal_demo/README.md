@@ -26,6 +26,26 @@ An ultra-fast, privacy-first **On-Device Multimodal Vision AI** Flutter applicat
 
 ---
 
+## 💥 Engineering Challenges & Solutions
+
+### 1. Multimodal Tokenizer Marker Error (`mtmd_tokenize failed: rc=2`)
+- **Challenge**: Standard LLaVA media markers (`<__media__>`) caused native C++ tokenization exceptions when processing Qwen3-VL GGUF models.
+- **Solution**: Updated the vision marker configuration and migrated to `llamadart`'s structured `LlamaContentPart` API (`LlamaImageContent` + `LlamaTextContent`) which manages Qwen's specific `<|vision_start|><|image_pad|><|vision_end|>` placeholder sequence natively.
+
+### 2. Missing Native M-RoPE Spatial Patch Merger Operators
+- **Challenge**: Default pre-compiled Flutter AAR native libraries lacked recent C++ patches for Qwen3-VL spatial patch merging (M-RoPE position encodings).
+- **Solution**: Cross-compiled latest `llama.cpp` master source for Android `arm64-v8a` using Android NDK 28 (`Clang 19`) & CMake Ninja, producing updated `libllama.so` & `libmtmd.so` shared libraries placed directly in `android/app/src/main/jniLibs/arm64-v8a/`.
+
+### 3. EXIF Metadata & Image Decoding Crash in C++ `stb_image`
+- **Challenge**: Raw camera JPEGs with dynamic EXIF orientation headers frequently crashed the native C++ image decoder during multimodal evaluation.
+- **Solution**: Implemented GPU-accelerated image normalization via `dart:ui.instantiateImageCodec`, converting input images to clean baseline 512x512 PNG byte streams prior to native FFI handoff.
+
+### 4. Android Gradle Java/Kotlin Compatibility
+- **Challenge**: Kotlin Gradle compilation mismatches between Java 11 and Java 17 bytecode targets across Flutter plugin dependencies.
+- **Solution**: Enforced JVM target parity across all Gradle subprojects by configuring `jvmTarget = JvmTarget.JVM_17` and `JavaVersion.VERSION_17` in `android/app/build.gradle.kts`.
+
+---
+
 ## 📂 Model Setup Guide
 
 To run the model on your Android device:
