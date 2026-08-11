@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import Mock
 
+# Try to import u2_flutter, skip tests if not available
 try:
     from u2_flutter import FlutterStaticChecker, FlutterScriptDriver
     HAS_U2_FLUTTER = True

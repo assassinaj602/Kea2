@@ -7,14 +7,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Try to import u2_flutter, skip tests if not available
 try:
     from u2_flutter import with_flutter
+    HAS_U2_FLUTTER = True
 except ImportError:
-    from unittest import SkipTest
-    raise SkipTest("u2_flutter not installed; skipping Flutter Gallery tests")
+    HAS_U2_FLUTTER = False
+    with_flutter = None
 
 from kea2 import precondition, prob
 
+@unittest.skipIf(not HAS_U2_FLUTTER, "u2_flutter not installed")
 class TestFlutterGallery(unittest.TestCase):
     """Test properties for Flutter Gallery app"""
 
