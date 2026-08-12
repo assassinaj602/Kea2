@@ -745,12 +745,15 @@ Prerequisites: Ensure `u2_flutter` is installed:
 pip install u2_flutter
 ```
 
+> **Phase 2 Scope:** Native preconditions (`self.d`) + Flutter actions (`self.flutter`). Flutter preconditions will be supported in Phase 3.
+
 **Usage and Core API**
 
 Operating a Flutter page in Kea2 can be accomplished with `u2_flutter`:
 
 1. **Applying the Decorator:** Add the `@with_flutter` decorator to test methods requiring Flutter widget interaction.
-2. **Widget Locating and Preconditions:** Access Flutter widgets using `self.flutter` helper or `FlutterStaticChecker`.
+2. **Native Preconditions:** Check native screen state using `self.d(...)` in `@precondition`.
+3. **Flutter Actions:** Access Flutter widgets using `self.flutter` helper inside `@with_flutter` decorated methods.
 
 **Sample**
 
@@ -769,21 +772,15 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 @unittest.skipIf(not HAS_U2_FLUTTER, "u2_flutter not installed")
-class TestFlutterGallery(unittest.TestCase):
-    """Test properties for Flutter Gallery app"""
+class TestFlutterInteraction(unittest.TestCase):
+    """Test properties for Flutter app (Phase 2: Native precondition + Flutter action)"""
 
     @with_flutter
     @prob(0.4)
-    @precondition(lambda self: self.flutter.find_by_key("HomeListView").exists)
-    def test_gallery_home_view(self):
-        """Verify Gallery home list view is present and active"""
-        logger.info("[OK] HomeListView detected in Flutter Gallery")
-
-    @with_flutter
-    @prob(0.3)
-    @precondition(lambda self: self.flutter.find_by_type("ElevatedButton").exists)
-    def test_elevated_button_interact(self):
-        """Find and interact with an ElevatedButton if visible"""
+    # Phase 2: Native precondition (self.d)
+    @precondition(lambda self: self.d(text="Open Flutter").exists)
+    def test_flutter_interaction(self):
+        """Perform Flutter interaction once native precondition is met"""
         buttons = self.flutter.find_by_type("ElevatedButton")
         if buttons:
             buttons.tap()

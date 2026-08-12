@@ -723,12 +723,15 @@ u2_flutter 仓库地址：https://github.com/assassinaj602/u2_flutter
 pip install u2_flutter
 ```
 
+> **Phase 2 范围说明：** 支持原生前置条件 (`self.d`) + Flutter 操作 (`self.flutter`)。Flutter 前置条件将在 Phase 3 中支持。
+
 **使用方式与核心 API**
 
 在 Kea2 中与 Flutter 页面进行交互非常简单：
 
 1. **挂载装饰器**：在需要与 Flutter 界面交互的测试方法上添加 `@with_flutter` 装饰器。
-2. **控件定位与前置条件**：通过 `self.flutter` 或 `FlutterStaticChecker` 进行控件查找与交互。
+2. **原生前置条件**：在 `@precondition` 中使用 `self.d(...)` 检查原生界面状态。
+3. **Flutter 操作**：在带有 `@with_flutter` 装饰的方法中，通过 `self.flutter` 进行控件查找与交互。
 
 **示例**
 
@@ -747,21 +750,15 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 @unittest.skipIf(not HAS_U2_FLUTTER, "未安装 u2_flutter")
-class TestFlutterGallery(unittest.TestCase):
-    """Flutter Gallery 应用属性测试示例"""
+class TestFlutterInteraction(unittest.TestCase):
+    """Flutter 应用属性测试示例（Phase 2：原生前置条件 + Flutter 操作）"""
 
     @with_flutter
     @prob(0.4)
-    @precondition(lambda self: self.flutter.find_by_key("HomeListView").exists)
-    def test_gallery_home_view(self):
-        """验证 Flutter Gallery 首页列表组件存在"""
-        logger.info("[OK] 在 Flutter Gallery 中检测到 HomeListView")
-
-    @with_flutter
-    @prob(0.3)
-    @precondition(lambda self: self.flutter.find_by_type("ElevatedButton").exists)
-    def test_elevated_button_interact(self):
-        """查找并点击可见的 ElevatedButton 按钮"""
+    # Phase 2：原生前置条件 (self.d)
+    @precondition(lambda self: self.d(text="Open Flutter").exists)
+    def test_flutter_interaction(self):
+        """满足原生前置条件后进行 Flutter 操作"""
         buttons = self.flutter.find_by_type("ElevatedButton")
         if buttons:
             buttons.tap()
