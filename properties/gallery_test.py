@@ -13,31 +13,32 @@ try:
     HAS_U2_FLUTTER = True
 except ImportError:
     HAS_U2_FLUTTER = False
-    with_flutter = None
+    with_flutter = lambda func: func
+
 
 from kea2 import precondition, prob
 
 @unittest.skipIf(not HAS_U2_FLUTTER, "u2_flutter not installed")
 class TestFlutterGallery(unittest.TestCase):
-    """Test properties for Flutter Gallery app"""
+    """Test properties for Flutter Gallery app (Phase 2: Native precondition + Flutter action)"""
 
     @with_flutter
     @prob(0.4)
-    @precondition(lambda self: self.flutter.find_by_key("HomeListView").exists)
+    @precondition(lambda self: self.d(text="Open Flutter").exists)
     def test_gallery_home_view(self):
         """Verify Gallery home list view is present and active"""
         logger.info("[OK] HomeListView detected in Flutter Gallery")
 
     @with_flutter
     @prob(0.3)
-    @precondition(lambda self: self.flutter.find_by_text("Reply").exists)
+    @precondition(lambda self: self.d(text="Open Flutter").exists)
     def test_reply_study_exists(self):
         """Verify Reply study option exists on home screen"""
         logger.info("[OK] Reply study option detected")
 
     @with_flutter
     @prob(0.3)
-    @precondition(lambda self: self.flutter.find_by_type("ElevatedButton").exists)
+    @precondition(lambda self: self.d(text="Open Flutter").exists)
     def test_elevated_button_interact(self):
         """Find and interact with an ElevatedButton if visible"""
         buttons = self.flutter.find_by_type("ElevatedButton")
@@ -46,3 +47,4 @@ class TestFlutterGallery(unittest.TestCase):
             logger.info("[OK] ElevatedButton tapped")
         else:
             logger.info("[INFO] No ElevatedButton found on current screen")
+
