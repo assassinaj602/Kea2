@@ -24,21 +24,21 @@ class TestFlutterGallery(unittest.TestCase):
 
     @with_flutter
     @prob(0.4)
-    @precondition(lambda self: self.d(text="Gallery").exists or self.d(description="u2_flutter Test App").exists or self.d(description="Submit").exists or self.d(descriptionContains="Reply").exists)
+    @precondition(lambda self: self.d(text="test_app").exists or self.d(description="test_app").exists or self.d(text="Gallery").exists or self.d(description="u2_flutter Test App").exists)
     def test_gallery_home_view(self):
         """Verify Gallery home list view is present and active"""
         logger.info("[OK] HomeListView detected in Flutter Gallery")
 
     @with_flutter
     @prob(0.3)
-    @precondition(lambda self: self.d(text="Gallery").exists or self.d(description="u2_flutter Test App").exists or self.d(description="Submit").exists or self.d(descriptionContains="Reply").exists)
+    @precondition(lambda self: self.d(text="test_app").exists or self.d(description="test_app").exists or self.d(text="Gallery").exists or self.d(description="u2_flutter Test App").exists)
     def test_reply_study_exists(self):
         """Verify Reply study option exists on home screen"""
         logger.info("[OK] Reply study option detected")
 
     @with_flutter
     @prob(0.3)
-    @precondition(lambda self: self.d(text="Gallery").exists or self.d(description="u2_flutter Test App").exists or self.d(description="Submit").exists or self.d(descriptionContains="Reply").exists)
+    @precondition(lambda self: self.d(text="test_app").exists or self.d(description="test_app").exists or self.d(text="Gallery").exists or self.d(description="u2_flutter Test App").exists)
     def test_elevated_button_interact(self):
         """Find and interact with an ElevatedButton if visible"""
         buttons = self.flutter.find_by_type("ElevatedButton")
@@ -47,4 +47,5 @@ class TestFlutterGallery(unittest.TestCase):
             logger.info("[OK] ElevatedButton tapped")
         else:
             logger.info("[INFO] No ElevatedButton found on current screen")
+
 
