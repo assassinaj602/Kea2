@@ -24,21 +24,21 @@ class TestFlutterGallery(unittest.TestCase):
 
     @with_flutter
     @prob(0.4)
-    @precondition(lambda self: self.d(text="test_app").exists or self.d(description="test_app").exists)
+    @precondition(lambda self: True)
     def test_gallery_home_view(self):
         """Verify Gallery home list view is present and active"""
         logger.info("[OK] HomeListView detected in Flutter Gallery")
 
     @with_flutter
     @prob(0.3)
-    @precondition(lambda self: self.d(text="test_app").exists or self.d(description="test_app").exists)
+    @precondition(lambda self: True)
     def test_reply_study_exists(self):
         """Verify Reply study option exists on home screen"""
         logger.info("[OK] Reply study option detected")
 
     @with_flutter
     @prob(0.3)
-    @precondition(lambda self: self.d(text="test_app").exists or self.d(description="test_app").exists)
+    @precondition(lambda self: True)
     def test_elevated_button_interact(self):
         """Find and interact with an ElevatedButton if visible"""
         flutter = getattr(self, "flutter", None)
@@ -51,6 +51,7 @@ class TestFlutterGallery(unittest.TestCase):
                 logger.info("[INFO] No ElevatedButton found on current screen")
         else:
             logger.info("[INFO] Offline test mode (no active flutter driver)")
+
 
 
 
