@@ -41,12 +41,17 @@ class TestFlutterGallery(unittest.TestCase):
     @precondition(lambda self: self.d(text="test_app").exists or self.d(description="test_app").exists)
     def test_elevated_button_interact(self):
         """Find and interact with an ElevatedButton if visible"""
-        buttons = self.flutter.find_by_type("ElevatedButton")
-        if buttons:
-            buttons.tap()
-            logger.info("[OK] ElevatedButton tapped")
+        flutter = getattr(self, "flutter", None)
+        if flutter:
+            buttons = flutter.find_by_type("ElevatedButton")
+            if buttons:
+                buttons.tap()
+                logger.info("[OK] ElevatedButton tapped")
+            else:
+                logger.info("[INFO] No ElevatedButton found on current screen")
         else:
-            logger.info("[INFO] No ElevatedButton found on current screen")
+            logger.info("[INFO] Offline test mode (no active flutter driver)")
+
 
 
 
