@@ -24,15 +24,20 @@ class TestHybridApp(unittest.TestCase):
 
     @with_flutter
     @prob(1.0)
-    @precondition(lambda self: self.d(text="Open Flutter").exists)
+    @precondition(lambda self: self.d(text="Photos").exists or self.d(description="Photos").exists or self.d(text="Open Flutter").exists)
     def test_native_to_flutter_flow(self):
         """Phase 2: Native precondition -> Native action -> Flutter action"""
-        logger.info("[STEP 1] Native precondition detected: 'Open Flutter' button exists")
+        logger.info("[STEP 1] Native precondition detected: native control exists")
 
         # Step 1: Click the native button
         if hasattr(self, "d"):
-            self.d(text="Open Flutter").click()
-            logger.info("[STEP 2] Clicked native 'Open Flutter' button")
+            if self.d(text="Open Flutter").exists:
+                self.d(text="Open Flutter").click()
+                logger.info("[STEP 2] Clicked native 'Open Flutter' button")
+            elif self.d(text="Photos").exists:
+                self.d(text="Photos").click()
+                logger.info("[STEP 2] Clicked native 'Photos' control")
+
 
         # Step 2: Flutter action
         flutter = getattr(self, "flutter", None)
