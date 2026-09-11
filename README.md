@@ -349,6 +349,8 @@ What Kea2 has changed:
 
 - [Kea2: Practical Property-based Testing for Mobile Apps](https://dl.acm.org/doi/10.1145/3803437.3806416). FSE 2026.
 - [General and Practical Property-based Testing for Android Apps](https://dl.acm.org/doi/10.1145/3691620.3694986). ASE 2024.
+- [Model-guided Property-based Testing of WeChat Pay at Billion-user Scale](). ASE 2026.
+- [PropGen: Automated Property Generation for Property-Based Testing of Mobile Apps](). ASE 2026.
 - [An Empirical Study of Functional Bugs in Android Apps](https://dl.acm.org/doi/10.1145/3597926.3598138). ISSTA 2023.
 - [Fastbot2: Reusable Automated Model-based GUI Testing for Android Enhanced by Reinforcement Learning](https://dl.acm.org/doi/10.1145/3551349.3559505). ASE 2022.
 - [Guided, Stochastic Model-Based GUI Testing of Android Apps](https://dl.acm.org/doi/10.1145/3106237.3106298). ESEC/FSE 2017.
@@ -399,8 +401,12 @@ Please contact Xixian Liang at [xixian@stu.ecnu.edu.cn](xixian@stu.ecnu.edu.cn) 
 
 Of course, we are also ready on GitHub to answer your questions/feedback.
 
+**From an enterprise or university?** If your organization is using or evaluating Kea2, you are welcome to fill in a short form by clicking the link or scanning the QR code below, so that we can support you better.
+
+Form link: <https://sy8pzmhmun.feishu.cn/share/base/form/shrcn5An36fzPzPEZsZ7mzSCE4b>
+
 <div align="center">
-    <img src="https://github.com/user-attachments/assets/8d9f8750-1e10-411b-a49f-7d8367bbe9fe" style="border-radius: 14px; width: 20%; height: 20%;"/> 
+    <img src="https://github.com/user-attachments/assets/ed2b16d7-6a7c-4814-8325-1a855e872f22" alt="Kea2 signup form QR code" style="border-radius: 14px; width: 20%; height: 20%;"/>
 </div>
 
 ### Maintainers/Contributors
