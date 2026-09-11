@@ -24,19 +24,23 @@ class TestHybridApp(unittest.TestCase):
 
     @with_flutter
     @prob(1.0)
-    @precondition(lambda self: self.d(text="Photos").exists or self.d(description="Photos").exists or self.d(text="Open Flutter").exists)
+    @precondition(lambda self: self.d(text="Gallery").exists or self.d(description="Settings").exists or self.d(descriptionContains="Reply").exists or self.d(text="Open Flutter").exists)
     def test_native_to_flutter_flow(self):
         """Phase 2: Native precondition -> Native action -> Flutter action"""
-        logger.info("[STEP 1] Native precondition detected: native control exists")
+        logger.info("[STEP 1] Native precondition detected: Flutter Gallery app header/controls exist")
 
-        # Step 1: Click the native button
+        # Step 1: Click the native control
         if hasattr(self, "d"):
             if self.d(text="Open Flutter").exists:
                 self.d(text="Open Flutter").click()
-                logger.info("[STEP 2] Clicked native 'Open Flutter' button")
-            elif self.d(text="Photos").exists:
-                self.d(text="Photos").click()
-                logger.info("[STEP 2] Clicked native 'Photos' control")
+                logger.info("[STEP 2] Clicked 'Open Flutter' button")
+            elif self.d(description="Settings").exists:
+                self.d(description="Settings").click()
+                logger.info("[STEP 2] Clicked 'Settings' icon")
+            elif self.d(text="Gallery").exists:
+                self.d(text="Gallery").click()
+                logger.info("[STEP 2] Clicked 'Gallery' title")
+
 
 
         # Step 2: Flutter action
