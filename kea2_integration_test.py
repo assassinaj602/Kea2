@@ -3,12 +3,20 @@ from unittest.mock import Mock
 
 # Try to import u2_flutter, skip tests if not available
 try:
-    from u2_flutter import FlutterStaticChecker, FlutterScriptDriver
+    from kea2_integration import FlutterStaticChecker, FlutterScriptDriver
     HAS_U2_FLUTTER = True
 except ImportError:
-    HAS_U2_FLUTTER = False
-    FlutterStaticChecker = None
-    FlutterScriptDriver = None
+    try:
+        from u2_flutter.kea2_integration import FlutterStaticChecker, FlutterScriptDriver
+        HAS_U2_FLUTTER = True
+    except ImportError:
+        try:
+            from u2_flutter import FlutterStaticChecker, FlutterScriptDriver
+            HAS_U2_FLUTTER = True
+        except ImportError:
+            HAS_U2_FLUTTER = False
+            FlutterStaticChecker = None
+            FlutterScriptDriver = None
 
 class NativeOnlyTest(unittest.TestCase):
     """Ensures native Android check functions normally without Flutter active."""

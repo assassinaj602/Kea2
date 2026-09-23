@@ -23,11 +23,19 @@ class TestHybridApp(unittest.TestCase):
 
     @with_flutter
     @prob(1.0)
-    @precondition(lambda self: self.d(text="Open Flutter").exists)
+    @precondition(lambda self: self.d(text="OPEN FLUTTER").exists)
     def test_native_to_flutter_flow(self):
-        self.d(text="Open Flutter").click()
-        # allow time for Flutter screen + engine to attach
-        import time
-        time.sleep(1.5)
-        assert self.flutter.find_by_key("HomeListView").exists, \
-            "Flutter screen did not load after native click"
+        """
+        Phase 2 demo: native precondition detects a real native control,
+        clicks it, which navigates into the Flutter screen, then a Flutter
+        action executes on that screen.
+        """
+        btn = self.d(text="OPEN FLUTTER")
+        if btn.exists:
+            btn.click()
+            import time
+            time.sleep(2.0)
+        exists = self.flutter.find_by_key("HomeListView").exists
+        logger.info(f"[RESULT] HomeListView exists = {exists}")
+        assert exists, "Flutter screen did not load after native click"
+        logger.info("[RESULT] Phase 2 flow completed successfully")
