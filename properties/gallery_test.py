@@ -4,6 +4,7 @@ Tests various Flutter widgets in the official Gallery app
 """
 import unittest
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -28,14 +29,29 @@ class TestHybridApp(unittest.TestCase):
         """
         Phase 2 demo: native precondition detects a real native control,
         clicks it, which navigates into the Flutter screen, then a Flutter
-        action executes on that screen.
+        action executes on that screen and verifies incremented tap count.
         """
         btn = self.d(text="OPEN FLUTTER")
         if btn.exists:
             btn.click()
-            import time
-            time.sleep(2.0)
+            time.sleep(1.5)
+
         exists = self.flutter.find_by_key("HomeListView").exists
         logger.info(f"[RESULT] HomeListView exists = {exists}")
         assert exists, "Flutter screen did not load after native click"
-        logger.info("[RESULT] Phase 2 flow completed successfully")
+
+        before_text = self.flutter.find_by_key("statusText").text
+        logger.info(f"[RESULT] statusText before tap = {before_text}")
+        before_count = int(before_text.split(":")[1].strip())
+
+        self.flutter.find_by_key("actionButton").tap()
+        logger.info("[RESULT] Tapped actionButton")
+        time.sleep(0.5)
+
+        after_text = self.flutter.find_by_key("statusText").text
+        logger.info(f"[RESULT] statusText after tap = {after_text}")
+        after_count = int(after_text.split(":")[1].strip())
+
+        assert after_count == before_count + 1, \
+            f"Expected tap count to increase by 1 (before={before_count}, after={after_count})"
+        logger.info(f"[RESULT] Phase 2 flow completed successfully — tap count increased from {before_count} to {after_count}")
