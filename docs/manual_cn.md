@@ -766,7 +766,7 @@ class TestFlutterInteraction(unittest.TestCase):
 ```
 
 
-https://github.com/assassinaj602/Kea2/releases/download/demo-video-v1/FINAL.webm
+https://github.com/user-attachments/assets/de8e7e95-b9b3-4a97-8498-447e0f370667
 
 
 # 实验性功能
