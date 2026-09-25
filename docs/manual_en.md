@@ -788,7 +788,7 @@ class TestFlutterInteraction(unittest.TestCase):
 ```
 
 
-https://github.com/assassinaj602/Kea2/releases/download/v0.0.1-demo/flutter_demo_small.mp4
+https://github.com/assassinaj602/Kea2/releases/download/demo-video-v1/FINAL.webm
 
 
 # Experimental Feature
